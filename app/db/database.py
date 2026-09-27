@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
-DATABASE_URL = "postgresql+psycopg://knowledgehub:knowledgehub_dev@localhost:5432/knowledgehub"
+from app.core.config import DATABASE_URL
 
 
 engine = create_engine(
