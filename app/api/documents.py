@@ -7,6 +7,9 @@ from app.db.database import get_db
 from app.models.document import Document
 from app.models.user import User
 from app.schemas.document import DocumentCreate, DocumentResponse
+from app.services.chunking_service import chunk_text
+from app.models.document_chunk import DocumentChunk
+from app.services.embedding_service import generate_embedding
 
 
 router = APIRouter(
@@ -15,11 +18,7 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/",
-    response_model=DocumentResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/", response_model=DocumentResponse, status_code=201)
 async def create_document(
     document: DocumentCreate,
     db: Session = Depends(get_db),
@@ -32,6 +31,22 @@ async def create_document(
     )
 
     db.add(new_document)
+    db.flush()
+
+    chunks = chunk_text(document.content)
+
+    for index, content in enumerate(chunks):
+        embedding = generate_embedding(content)
+
+        chunk = DocumentChunk(
+            document_id=new_document.id,
+            chunk_index=index,
+            content=content,
+            embedding=embedding,
+        )
+
+        db.add(chunk)
+
     db.commit()
     db.refresh(new_document)
 
@@ -63,9 +78,8 @@ async def get_document(
     document_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-
-): 
-    document =db.execute(
+):
+    document = db.execute(
         select(Document).where(
             Document.id == document_id,
             Document.user_id == current_user.id,
@@ -76,6 +90,6 @@ async def get_document(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Document not found",
-        )     
+        )
 
     return document
