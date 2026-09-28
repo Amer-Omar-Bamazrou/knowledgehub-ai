@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.models.document_chunk import DocumentChunk
 from app.services.embedding_service import generate_embedding
 
+RELEVANCE_THRESHOLD = 0.50
+
 def search_similar_chunks(
         question: str,
         user_id: int,
@@ -12,17 +14,27 @@ def search_similar_chunks(
 ) -> list[DocumentChunk]:
     question_embedding = generate_embedding(question)
 
-    statment = (
-        select(DocumentChunk)
+
+    distance = DocumentChunk.embedding.cosine_distance(question_embedding)
+
+    statement = (
+        select(DocumentChunk, distance.label("distance"))
         .join(DocumentChunk.document)
         .where(
             DocumentChunk.document.has(user_id=user_id)
         )
         .order_by(
-            DocumentChunk.embedding.cosine_distance(question_embedding)
+            distance
         )
         .limit(limit)
     )
 
-    return list(db.scalars(statment).all())
+    results = db.execute(statement).all()
 
+    relevant_chunks = [
+        chunk
+        for chunk, distance_value in results
+        if distance_value <= RELEVANCE_THRESHOLD
+    ]
+
+    return relevant_chunks

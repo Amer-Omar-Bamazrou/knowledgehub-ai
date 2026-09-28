@@ -24,20 +24,17 @@ def ask_knowledge_base(
         for chunk in chunks
     )
 
-
     prompt = f"""
-You are an AI assistant for KnowledgeHub AI.
-
-Answer the user's question using only the provided documents context.
-
-If the answer cannot be found in the provided context, say:
-"I could not find the answer in your documents."
+Use the document context below to answer the user's question.
 
 Document context:
 {context}
 
-User question:
+Question:
 {question}
+
+Answer briefly using only the document context.
 """
+
 
     return generate_response(prompt)
