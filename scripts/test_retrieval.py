@@ -6,7 +6,7 @@ from app.models.document_chunk import DocumentChunk
 from app.services.embedding_service import generate_embedding
 
 
-def test_retrieval(question: str):
+def run_retrieval_test(question: str):
     db = SessionLocal()
 
     try:
@@ -39,10 +39,10 @@ def test_retrieval(question: str):
 
 
 if __name__ == "__main__":
-    test_retrieval("What framework is used to build the API?")
-    test_retrieval("What database does the application use?")
-    test_retrieval("What ORM is used in the project?")
-    test_retrieval("What programming language is mentioned?")
-    test_retrieval("What is the capital of France?")
-    test_retrieval("How do I make a chocolate cake?")
-    test_retrieval("What is the weather today?")
+    run_retrieval_test("What framework is used to build the API?")
+    run_retrieval_test("What database does the application use?")
+    run_retrieval_test("What ORM is used in the project?")
+    run_retrieval_test("What programming language is mentioned?")
+    run_retrieval_test("What is the capital of France?")
+    run_retrieval_test("How do I make a chocolate cake?")
+    run_retrieval_test("What is the weather today?")
