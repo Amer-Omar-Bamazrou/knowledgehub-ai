@@ -9,7 +9,10 @@ from app.models.document_chunk import DocumentChunk
 from app.models.user import User
 from app.schemas.document import DocumentCreate, DocumentResponse
 from app.services.chunking_service import chunk_text
-from app.services.document_parser import extract_text_from_txt
+from app.services.document_parser import (
+    extract_text_from_pdf,
+    extract_text_from_txt,
+)
 from app.services.embedding_service import generate_embedding
 
 
@@ -112,16 +115,21 @@ async def upload_document(
             detail="Filename is required",
         )
 
-    if not file.filename.lower().endswith(".txt"):
+    filename = file.filename.lower()
+
+    if not filename.endswith((".txt", ".pdf")):
         raise HTTPException(
             status_code=400,
-            detail="Only TXT files are currently supported",
+            detail="Only TXT and PDF files are currently supported",
         )
 
     contents = await file.read()
 
     try:
-        text = extract_text_from_txt(contents)
+        if filename.endswith(".pdf"):
+            text = extract_text_from_pdf(contents)
+        else:
+            text = extract_text_from_txt(contents)
     except UnicodeDecodeError:
         raise HTTPException(
             status_code=400,
