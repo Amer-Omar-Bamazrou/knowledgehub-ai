@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
 from app.models.user import User
 from app.schemas.document import DocumentCreate, DocumentResponse
 from app.services.chunking_service import chunk_text
-from app.models.document_chunk import DocumentChunk
+from app.services.document_parser import extract_text_from_txt
 from app.services.embedding_service import generate_embedding
 
 
@@ -93,3 +94,70 @@ async def get_document(
         )
 
     return document
+
+
+@router.post(
+    "/upload",
+    response_model=DocumentResponse,
+    status_code=201,
+)
+async def upload_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Filename is required",
+        )
+
+    if not file.filename.lower().endswith(".txt"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only TXT files are currently supported",
+        )
+
+    contents = await file.read()
+
+    try:
+        text = extract_text_from_txt(contents)
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="TXT file must use UTF-8 encoding",
+        )
+
+    if not text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="TXT file cannot be empty",
+        )
+
+    new_document = Document(
+        title=file.filename,
+        content=text,
+        user_id=current_user.id,
+    )
+
+    db.add(new_document)
+    db.flush()
+
+    chunks = chunk_text(text)
+
+    for index, content in enumerate(chunks):
+        embedding = generate_embedding(content)
+
+        chunk = DocumentChunk(
+            document_id=new_document.id,
+            chunk_index=index,
+            content=content,
+            embedding=embedding,
+        )
+
+        db.add(chunk)
+
+    db.commit()
+    db.refresh(new_document)
+
+    return new_document

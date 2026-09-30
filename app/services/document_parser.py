@@ -1,3 +1,2 @@
-def extract_text_from_txt(file_path: str) -> str:
-    with open(file_path, "r", encoding="utf-8") as file:
-        return file.read()
+def extract_text_from_txt(contents: bytes) -> str:
+    return contents.decode("utf-8")
