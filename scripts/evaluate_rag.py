@@ -44,7 +44,7 @@ def evaluate_rag():
             else:
                 success = any(
                     case["expected"] in chunk.content
-                    for chunk in chunks
+                    for chunk, distance in chunks
                 )
 
             if success:
