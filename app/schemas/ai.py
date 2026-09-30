@@ -9,5 +9,12 @@ class AIGenerateRequest(BaseModel):
     )
 
 
+class AISource(BaseModel):
+    document_id: int
+    document_title: str
+    chunk_id: int    
+
+
 class AIGenerateResponse(BaseModel):
     response: str
+    sources: list[AISource] = []

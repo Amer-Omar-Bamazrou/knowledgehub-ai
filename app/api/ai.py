@@ -10,10 +10,7 @@ from app.services.ai_service import generate_response
 from app.services.knowledge_service import ask_knowledge_base
 
 
-router = APIRouter(
-    prefix="/ai",
-    tags=["AI"],
-)
+router = APIRouter(prefix="/ai", tags=["AI"])
 
 
 @router.post(
@@ -28,6 +25,7 @@ def generate_ai_response(
 
     return AIGenerateResponse(
         response=response,
+        sources=[],
     )
 
 
@@ -40,7 +38,7 @@ def ask_ai(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    response = ask_knowledge_base(
+    response, sources = ask_knowledge_base(
         question=request.prompt,
         user_id=current_user.id,
         db=db,
@@ -48,4 +46,5 @@ def ask_ai(
 
     return AIGenerateResponse(
         response=response,
+        sources=sources,
     )
