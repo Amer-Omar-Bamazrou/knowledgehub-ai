@@ -11,7 +11,7 @@ def search_similar_chunks(
         user_id: int,
         db: Session,
         limit: int = 5,
-) -> list[DocumentChunk]:
+) -> list[tuple[DocumentChunk, float]]:
     question_embedding = generate_embedding(question)
 
 
@@ -32,7 +32,7 @@ def search_similar_chunks(
     results = db.execute(statement).all()
 
     relevant_chunks = [
-        chunk
+        (chunk, float(distance_value))
         for chunk, distance_value in results
         if distance_value <= RELEVANCE_THRESHOLD
     ]

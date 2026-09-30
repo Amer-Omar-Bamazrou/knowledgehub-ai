@@ -32,7 +32,7 @@ def test_rag_retrieves_expected_information():
             assert len(chunks) > 0
             assert any(
                 case["expected"] in chunk.content
-                for chunk in chunks
+                for chunk, distance in chunks
             )
 
     finally:

@@ -25,7 +25,7 @@ def ask_knowledge_base(
     context = "\n\n".join(
         f"Document: {chunk.document.title}\n"
         f"Document chunk:\n{chunk.content}"
-        for chunk in chunks
+        for chunk, _distance in chunks
     )
 
     prompt = f"""
@@ -47,8 +47,9 @@ Answer briefly using only the document context.
             "document_id": chunk.document_id,
             "document_title": chunk.document.title,
             "chunk_id": chunk.id,
+            "distance": distance,
         }
-        for chunk in chunks
+        for chunk, distance in chunks
     ]
 
     return response, sources

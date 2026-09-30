@@ -13,6 +13,7 @@ class AISource(BaseModel):
     document_id: int
     document_title: str
     chunk_id: int    
+    distance: float
 
 
 class AIGenerateResponse(BaseModel):

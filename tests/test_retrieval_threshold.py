@@ -1,4 +1,7 @@
 from app.db.database import SessionLocal
+from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
+from app.models.user import User
 from app.services.retrieval_service import search_similar_chunks
 
 
@@ -14,7 +17,7 @@ def test_relevant_question_returns_chunks():
         )
 
         assert len(chunks) > 0
-        assert any("FastAPI" in chunk.content for chunk in chunks)
+        assert any("FastAPI" in chunk.content for chunk, distance in chunks)
 
     finally:
         db.close()
